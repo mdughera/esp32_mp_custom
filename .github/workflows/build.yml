@@ -34,11 +34,12 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 4.5️⃣ Build mpy-cross
+      # 4.5️⃣ Build mpy-cross and store absolute path
       - name: Build mpy-cross
         run: |
           cd micropython/mpy-cross
           make -j$(nproc)
+          echo "$(pwd)/mpy-cross" >> $GITHUB_ENV  # sets MPY_CROSS env variable
 
       # 4.6️⃣ Precompile modules to .mpy and copy for freezing
       - name: Precompile modules to .mpy
@@ -47,7 +48,7 @@ jobs:
           mkdir -p "$MICROPY_DIR/ports/esp32/modules"
           for f in modules/*.py; do
             echo "Compiling $f to .mpy"
-            "$MICROPY_DIR/mpy-cross/mpy-cross" "$f"
+            "$MPY_CROSS" "$f"
             cp "${f%.py}.mpy" "$MICROPY_DIR/ports/esp32/modules/"
           done
 
