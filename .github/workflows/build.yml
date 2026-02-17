@@ -1,0 +1,32 @@
+name: Build ESP32 Firmware
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board:
+          - ESP32_GENERIC_S3
+          - ESP32_GENERIC_C6
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build firmware
+        uses: micropython/mpbuild@v1
+        with:
+          port: esp32
+          board: ${{ matrix.board }}
+          micropython-ref: v1.25.0
+          frozen-manifest: firmware/manifest.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.board }}
+          path: build-*/firmware.bin
