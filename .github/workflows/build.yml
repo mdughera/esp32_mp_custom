@@ -34,7 +34,7 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 4.5️⃣ Build mpy-cross and precompile modules
+      # 4.5️⃣ Build mpy-cross and freeze modules
       - name: Build mpy-cross and freeze modules
         run: |
           MICROPY_DIR=$(pwd)/micropython
@@ -43,7 +43,7 @@ jobs:
           cd "$MICROPY_DIR/mpy-cross"
           make -j$(nproc)
 
-          # Detect mpy-cross executable (works for all MicroPython versions)
+          # Detect mpy-cross binary
           if [ -f ./mpy-cross ]; then
               MPY_CROSS=$(pwd)/mpy-cross
           elif [ -f ./build/mpy-cross ]; then
@@ -54,15 +54,20 @@ jobs:
           fi
           echo "Using mpy-cross: $MPY_CROSS"
 
-          # Prepare modules folder for freezing
-          mkdir -p "$MICROPY_DIR/ports/esp32/modules"
+          # Prepare modules folder
+          MODULES_DIR="$MICROPY_DIR/ports/esp32/modules"
+          mkdir -p "$MODULES_DIR"
 
-          # Compile each module to .mpy and copy into modules folder
+          # Compile all modules to .mpy and copy to ports/esp32/modules
           for f in ../../modules/*.py; do
               echo "Compiling $f to .mpy"
               "$MPY_CROSS" "$f"
-              cp "${f%.py}.mpy" "$MICROPY_DIR/ports/esp32/modules/"
+              cp "${f%.py}.mpy" "$MODULES_DIR/"
           done
+
+          # Generate frozen_content.c from the .mpy files
+          cd "$MICROPY_DIR/ports/esp32"
+          python ../tools/freeze.py --modules modules
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware
       - name: Build ESP32_GENERIC_S3 firmware
