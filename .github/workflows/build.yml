@@ -34,7 +34,7 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 4.5️⃣ Build mpy-cross and freeze modules
+      # 4.5️⃣ Build mpy-cross and precompile modules
       - name: Build mpy-cross and freeze modules
         run: |
           MICROPY_DIR=$(pwd)/micropython
@@ -65,9 +65,7 @@ jobs:
               cp "${f%.py}.mpy" "$MODULES_DIR/"
           done
 
-          # Generate frozen_content.c from the .mpy files
-          cd "$MICROPY_DIR/ports/esp32"
-          python ../tools/freeze.py --modules modules
+          # ✅ No freeze.py needed; mpbuild will pick up .mpy files automatically
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware
       - name: Build ESP32_GENERIC_S3 firmware
