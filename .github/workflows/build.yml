@@ -1,4 +1,4 @@
-name: Python in Docker with MicroPython Clone
+name: Python in Docker with MicroPython Clone and mpbuild
 
 on:
   workflow_dispatch:  # Manual trigger only
@@ -16,8 +16,8 @@ jobs:
       - name: Pull latest Python 3 Docker image
         run: docker pull python:3
 
-      # 3️⃣ Run Python version and clone MicroPython inside Docker
-      - name: Run Python and clone MicroPython
+      # 3️⃣ Run Python version, install mpbuild, and clone MicroPython inside Docker
+      - name: Run Python, install mpbuild, and clone MicroPython
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
@@ -25,5 +25,7 @@ jobs:
             python:3 \
             bash -c "
               echo 'Python version:' && python --version && \
+              pip install --upgrade pip && \
+              pip install mpbuild && \
               git clone https://github.com/micropython/micropython.git
             "
