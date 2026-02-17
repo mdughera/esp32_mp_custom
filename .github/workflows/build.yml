@@ -41,14 +41,13 @@ jobs:
           MODULES_DIR="$MICROPY_DIR/ports/esp32/modules"
           mkdir -p "$MODULES_DIR"
 
-          # Check if modules exist in repo root /modules
-          if [ -z "$(ls ../modules/*.py 2>/dev/null)" ]; then
-              echo "Error: No Python modules found in ../modules/"
+          # Use absolute path from repo root
+          if [ -z "$(ls $GITHUB_WORKSPACE/modules/*.py 2>/dev/null)" ]; then
+              echo "Error: No Python modules found in $GITHUB_WORKSPACE/modules/"
               exit 1
           fi
 
-          # Copy modules into ports/esp32/modules for freezing
-          cp ../modules/*.py "$MODULES_DIR/"
+          cp $GITHUB_WORKSPACE/modules/*.py "$MODULES_DIR/"
 
       # 4.6️⃣ Precompile .py modules to .mpy to catch syntax errors
       - name: Precompile modules to .mpy (syntax check)
