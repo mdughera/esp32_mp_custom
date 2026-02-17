@@ -1,4 +1,4 @@
-name: Build MicroPython Firmware v1.27
+name: Build MicroPython Firmware v1.27 (Ready-to-Flash)
 
 on:
   push:
@@ -15,11 +15,11 @@ jobs:
           - ESP32_GENERIC_C6
 
     steps:
-      # 1️⃣ Checkout your repository
+      # 1️⃣ Checkout your repo
       - uses: actions/checkout@v4
 
-      # 2️⃣ Clone MicroPython v1.27
-      - name: Clone MicroPython source
+      # 2️⃣ Clone MicroPython source at v1.27
+      - name: Clone MicroPython
         run: |
           git clone --depth 1 --branch v1.27.0 https://github.com/micropython/micropython.git micropython
 
@@ -29,26 +29,33 @@ jobs:
         with:
           python-version: 3.12
 
-      # 4️⃣ Install mpbuild and dependencies
+      # 4️⃣ Install mpbuild + dependency
       - name: Install mpbuild
         run: |
           python -m pip install --upgrade pip
           pip install mpbuild typing_extensions
 
-      # 5️⃣ Optional: list supported ESP32 boards
+      # 5️⃣ List ESP32 boards (optional debug)
       - name: List available ESP32 boards
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild list esp32
 
-      # 6️⃣ Build firmware for the current board
-      - name: Build firmware with frozen modules
+      # 6️⃣ Build firmware with frozen modules
+      - name: Build firmware
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython \
-          mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
+            mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
 
-      # 7️⃣ Upload the resulting firmware artifact
-      - name: Upload firmware artifact
+      # 7️⃣ Debug: Show all .bin files in the build folder
+      - name: List build folder contents
+        run: |
+          echo "Contents of build folder for ${{ matrix.board }}:"
+          ls -l micropython/ports/esp32/build-${{ matrix.board }}/*.bin
+
+      # 8️⃣ Upload all necessary files for flashing a new board
+      - name: Upload ready-to-flash firmware
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.board }}-v1.27
+          name: ready-to-flash-${{ matrix.board }}-v1.27
+          # Upload all .bin files in the build folder (bootloader, partition table, firmware)
           path: micropython/ports/esp32/build-${{ matrix.board }}/*.bin
