@@ -40,7 +40,15 @@ jobs:
           MICROPY_DIR=$(pwd)/micropython
           MODULES_DIR="$MICROPY_DIR/ports/esp32/modules"
           mkdir -p "$MODULES_DIR"
-          cp ../../modules/*.py "$MODULES_DIR/"
+
+          # Check if modules exist
+          if [ -z "$(ls ../modules/*.py 2>/dev/null)" ]; then
+              echo "Error: No Python modules found in ../modules/"
+              exit 1
+          fi
+
+          # Copy modules into ports/esp32/modules for freezing
+          cp ../modules/*.py "$MODULES_DIR/"
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware (mpbuild handles freezing)
       - name: Build ESP32_GENERIC_S3 firmware
