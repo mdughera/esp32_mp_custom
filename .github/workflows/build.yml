@@ -1,34 +1,37 @@
 name: Build MicroPython ESP32 S3 Firmware
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
 
 jobs:
-  python-docker:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout this repository
+      # 1️⃣ Checkout repo (optional but good practice)
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Pull latest Python Docker image
-      - name: Pull latest Python 3 Docker image
-        run: docker pull python:3
+      # 2️⃣ Setup latest Python 3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-      # 3️⃣ Install mpbuild, clone MicroPython, list ESP32, and build ESP32_GENERIC_S3
-      - name: Build MicroPython firmware for ESP32_GENERIC_S3
+      # 3️⃣ Install mpbuild
+      - name: Install mpbuild
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            python:3 \
-            bash -c "
-              echo 'Python version:' && python --version && \
-              pip install --upgrade pip && \
-              pip install typing_extensions mpbuild && \
-              git clone https://github.com/micropython/micropython.git && \
-              cd micropython && \
-              echo 'Listing ESP32 targets:' && mpbuild list esp32 && \
-              echo 'Building ESP32_GENERIC_S3 firmware:' && mpbuild build ESP32_GENERIC_S3
-            "
+          python --version
+          pip install --upgrade pip
+          pip install typing_extensions mpbuild
+
+      # 4️⃣ Clone MicroPython
+      - name: Clone MicroPython
+        run: git clone https://github.com/micropython/micropython.git
+
+      # 5️⃣ Build ESP32_GENERIC_S3
+      - name: Build ESP32_GENERIC_S3
+        run: |
+          cd micropython
+          mpbuild list esp32
+          mpbuild build ESP32_GENERIC_S3
