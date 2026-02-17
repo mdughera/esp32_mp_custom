@@ -43,12 +43,12 @@ jobs:
       # 4.6️⃣ Precompile modules to .mpy and copy for freezing
       - name: Precompile modules to .mpy
         run: |
-          cd micropython
-          mkdir -p ports/esp32/modules
-          for f in ../modules/*.py; do
+          MICROPY_DIR=$(pwd)/micropython
+          mkdir -p "$MICROPY_DIR/ports/esp32/modules"
+          for f in modules/*.py; do
             echo "Compiling $f to .mpy"
-            ./mpy-cross/mpy-cross "$f"
-            cp "${f%.py}.mpy" ports/esp32/modules/
+            "$MICROPY_DIR/mpy-cross/mpy-cross" "$f"
+            cp "${f%.py}.mpy" "$MICROPY_DIR/ports/esp32/modules/"
           done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware
