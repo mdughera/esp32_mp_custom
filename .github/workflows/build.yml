@@ -18,7 +18,7 @@ jobs:
       # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Set up Docker properly
+      # 2️⃣ Set up Docker
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
@@ -55,11 +55,10 @@ jobs:
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild list esp32
 
-      # 8️⃣ Build firmware
+      # 8️⃣ Build firmware (no SPIRAM/OCT variant)
       - name: Build firmware
         run: |
-          MICROPY_DIR=$GITHUB_WORKSPACE/micropython \
-          mpbuild build ${{ matrix.board }} SPIRAM_OCT
+          MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ${{ matrix.board }}
 
       # 9️⃣ Debug: show generated .bin files
       - name: Show build folder contents
