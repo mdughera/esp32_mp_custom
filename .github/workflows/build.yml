@@ -1,23 +1,20 @@
 name: Python in Docker with MicroPython Clone and mpbuild ESP32
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
 
 jobs:
   python-docker:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout this repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Pull latest Python Docker image
-      - name: Pull latest Python 3 Docker image
+      - name: Pull latest Python Docker image
         run: docker pull python:3
 
-      # 3️⃣ Run mpbuild commands inside Docker
-      - name: Run mpbuild list esp32
+      - name: Run mpbuild list esp32 inside MicroPython
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
@@ -26,8 +23,38 @@ jobs:
             bash -c "
               echo 'Python version:' && python --version && \
               pip install --upgrade pip && \
-              pip install typing_extensions && \
-              pip install mpbuild && \
+              pip install typing_extensions mpbuild && \
               git clone https://github.com/micropython/micropython.git && \
+              cd micropython && \
+              echo 'Listing ESP32 targets:' && mpbuild list esp32
+            "
+name: Python in Docker with MicroPython Clone and mpbuild ESP32
+
+on:
+  workflow_dispatch:
+
+jobs:
+  python-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Pull latest Python Docker image
+        run: docker pull python:3
+
+      - name: Run mpbuild list esp32 inside MicroPython
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3 \
+            bash -c "
+              echo 'Python version:' && python --version && \
+              pip install --upgrade pip && \
+              pip install typing_extensions mpbuild && \
+              git clone https://github.com/micropython/micropython.git && \
+              cd micropython && \
               echo 'Listing ESP32 targets:' && mpbuild list esp32
             "
