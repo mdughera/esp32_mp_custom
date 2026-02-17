@@ -41,7 +41,7 @@ jobs:
           MODULES_DIR="$MICROPY_DIR/ports/esp32/modules"
           mkdir -p "$MODULES_DIR"
 
-          # Check if modules exist
+          # Check if modules exist in repo root /modules
           if [ -z "$(ls ../modules/*.py 2>/dev/null)" ]; then
               echo "Error: No Python modules found in ../modules/"
               exit 1
@@ -49,6 +49,22 @@ jobs:
 
           # Copy modules into ports/esp32/modules for freezing
           cp ../modules/*.py "$MODULES_DIR/"
+
+      # 4.6️⃣ Precompile .py modules to .mpy to catch syntax errors
+      - name: Precompile modules to .mpy (syntax check)
+        run: |
+          cd micropython
+          # Build mpy-cross for this MicroPython version
+          cd mpy-cross
+          make -j$(nproc)
+          MPY_CROSS=$(pwd)/mpy-cross
+          cd ../ports/esp32/modules
+
+          # Compile each module
+          for f in *.py; do
+              echo "Precompiling $f"
+              "$MPY_CROSS" "$f" || { echo "Syntax error in $f"; exit 1; }
+          done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware (mpbuild handles freezing)
       - name: Build ESP32_GENERIC_S3 firmware
