@@ -15,32 +15,37 @@ jobs:
           - ESP32_GENERIC_C6
 
     steps:
-      # 1️⃣ Checkout your repo
+      # Checkout repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Setup Python 3.12
+      # Setup a stable Python version for mpbuild
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.12"
 
-      # 3️⃣ Install mpbuild + dependencies
+      # Install mpbuild and needed dependency
       - name: Install mpbuild
         run: |
           python -m pip install --upgrade pip
           pip install mpbuild typing_extensions
 
-      # 4️⃣ Initialize MicroPython source (v1.25)
-      - name: Initialize MicroPython source
-        run: mpbuild init --ref v1.25.0
+      # Fetch MicroPython source at v1.27.0
+      - name: Fetch MicroPython 1.27.0
+        run: mpbuild fetch v1.27.0
 
-      # 5️⃣ Build firmware for each board
+      # (Optional) List ESP32 boards available
+      - name: List ESP32 boards
+        run: mpbuild list esp32
+
+      # Build firmware with your frozen modules
       - name: Build firmware
         run: mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
         env:
-          MICROPY_DIR: $HOME/.mpbuild/micropython  # mpbuild clone path
+          # Set MICROPY_DIR to where mpbuild stored the source
+          MICROPY_DIR: $HOME/.mpbuild/micropython
 
-      # 6️⃣ Upload firmware artifacts
+      # Upload the resulting firmware
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
