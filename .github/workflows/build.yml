@@ -1,37 +1,7 @@
 name: Python in Docker with MicroPython Clone and mpbuild ESP32
 
 on:
-  workflow_dispatch:
-
-jobs:
-  python-docker:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Pull latest Python Docker image
-        run: docker pull python:3
-
-      - name: Run mpbuild list esp32 inside MicroPython
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            python:3 \
-            bash -c "
-              echo 'Python version:' && python --version && \
-              pip install --upgrade pip && \
-              pip install typing_extensions mpbuild && \
-              git clone https://github.com/micropython/micropython.git && \
-              cd micropython && \
-              echo 'Listing ESP32 targets:' && mpbuild list esp32
-            "
-name: Python in Docker with MicroPython Clone and mpbuild ESP32
-
-on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   python-docker:
