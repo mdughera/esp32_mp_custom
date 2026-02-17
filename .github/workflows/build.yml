@@ -63,17 +63,20 @@ jobs:
         run: |
           . ~/esp/esp-idf/export.sh
 
-      # 8️⃣ Build firmware
+      # 8️⃣ Build firmware (fixed Bash syntax)
       - name: Build firmware
         run: |
-          if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
-            echo "Building ESP32-S3 with Makefile (no SPIRAM)..."
-            cd micropython/ports/esp32
-            . ~/esp/esp-idf/export.sh
-            make BOARD=ESP32_GENERIC_S3
-          elif [ "${{ matrix.board }}" = "ESP32_GENERIC_C6" ]; then
-            echo "Building ESP32-C6 with mpbuild..."
-            MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ESP32_GENERIC_C6
+          BOARD=${{ matrix.board }}
+
+          if [ "$BOARD" = "ESP32_GENERIC_S3" ]; then
+              echo "Building ESP32-S3 with Makefile (no SPIRAM)..."
+              cd micropython/ports/esp32
+              . ~/esp/esp-idf/export.sh
+              make BOARD=ESP32_GENERIC_S3
+          elif [ "$BOARD" = "ESP32_GENERIC_C6" ]; then
+              echo "Building ESP32-C6 with mpbuild..."
+              MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ESP32_GENERIC_C6
+          fi
 
       # 9️⃣ Show build folder contents
       - name: Show build folder contents
