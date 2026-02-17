@@ -1,20 +1,26 @@
-name: Python Latest Setup
+name: Python in Latest Docker
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:  # Run manually from GitHub Actions tab
 
 jobs:
-  setup-python:
+  python-docker:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout your repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up latest Python 3
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'  # Installs latest 3.x version
+      # 2️⃣ Pull latest Python Docker image
+      - name: Pull latest Python 3 Docker image
+        run: docker pull python:3
 
-      - name: Verify Python version
-        run: python --version
+      # 3️⃣ Run your Python scripts inside Docker
+      - name: Run Python script in Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3 \
+            bash -c "python --version && python your_script.py"
