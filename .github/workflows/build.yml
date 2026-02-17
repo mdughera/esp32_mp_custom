@@ -34,20 +34,21 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 4.5️⃣ Build mpy-cross for compiling .py → .mpy
+      # 4.5️⃣ Build mpy-cross
       - name: Build mpy-cross
         run: |
           cd micropython/mpy-cross
           make -j$(nproc)
 
-      # 4.6️⃣ Precompile modules to .mpy
+      # 4.6️⃣ Precompile modules to .mpy and copy for freezing
       - name: Precompile modules to .mpy
         run: |
-          mkdir -p micropython/ports/esp32/modules
-          for f in modules/*.py; do
+          cd micropython
+          mkdir -p ports/esp32/modules
+          for f in ../modules/*.py; do
             echo "Compiling $f to .mpy"
-            ./micropython/mpy-cross/mpy-cross "$f"
-            cp "${f%.py}.mpy" micropython/ports/esp32/modules/
+            ./mpy-cross/mpy-cross "$f"
+            cp "${f%.py}.mpy" ports/esp32/modules/
           done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware
