@@ -34,23 +34,34 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 4.5️⃣ Build mpy-cross and precompile modules in a single block
+      # 4.5️⃣ Build mpy-cross and precompile modules
       - name: Build mpy-cross and freeze modules
         run: |
           MICROPY_DIR=$(pwd)/micropython
+
           # Build mpy-cross
           cd "$MICROPY_DIR/mpy-cross"
           make -j$(nproc)
-          MPY_CROSS=$(pwd)/mpy-cross
+
+          # Detect mpy-cross executable (works for all MicroPython versions)
+          if [ -f ./mpy-cross ]; then
+              MPY_CROSS=$(pwd)/mpy-cross
+          elif [ -f ./build/mpy-cross ]; then
+              MPY_CROSS=$(pwd)/build/mpy-cross
+          else
+              echo "Error: mpy-cross binary not found!"
+              exit 1
+          fi
+          echo "Using mpy-cross: $MPY_CROSS"
 
           # Prepare modules folder for freezing
           mkdir -p "$MICROPY_DIR/ports/esp32/modules"
 
           # Compile each module to .mpy and copy into modules folder
           for f in ../../modules/*.py; do
-            echo "Compiling $f to .mpy"
-            "$MPY_CROSS" "$f"
-            cp "${f%.py}.mpy" "$MICROPY_DIR/ports/esp32/modules/"
+              echo "Compiling $f to .mpy"
+              "$MPY_CROSS" "$f"
+              cp "${f%.py}.mpy" "$MICROPY_DIR/ports/esp32/modules/"
           done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware
