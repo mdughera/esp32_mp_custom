@@ -47,14 +47,15 @@ jobs:
             cp -r firmware/modules/* micropython/ports/esp32/boards/ESP32_GENERIC_C6/frozen_modules/
           fi
 
-      # 6️⃣ Install ESP-IDF + toolchains for ESP32-S3
-      - name: Install ESP-IDF + Tools
+      # 6️⃣ Install ESP-IDF v5.5.2 + Tools for S3
+      - name: Install ESP-IDF v5.5.2 + Tools
         if: matrix.board == 'ESP32_GENERIC_S3'
         run: |
           sudo apt update
           sudo apt install -y git wget flex bison gperf python3-pip ninja-build ccache libffi-dev libssl-dev dfu-util
-          git clone --branch v5.1 --depth 1 https://github.com/espressif/esp-idf.git ~/esp/esp-idf
-          python3 ~/esp/esp-idf/tools/idf_tools.py install
+          git clone --branch v5.5.2 --depth 1 https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+          cd ~/esp/esp-idf
+          python3 ./install.sh
 
       # 7️⃣ Export ESP-IDF environment
       - name: Export ESP-IDF
