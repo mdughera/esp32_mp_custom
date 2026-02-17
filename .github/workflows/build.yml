@@ -1,4 +1,4 @@
-name: Build MicroPython Firmware for Stamp-S3 with Frozen .mpy Modules
+name: Build MicroPython Firmware for Stamp-S3 with Frozen Modules
 
 on:
   workflow_dispatch:
@@ -34,40 +34,15 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 4.5️⃣ Build mpy-cross and precompile modules
-      - name: Build mpy-cross and freeze modules
+      # 4.5️⃣ Copy Python modules for freezing
+      - name: Copy modules for freezing
         run: |
           MICROPY_DIR=$(pwd)/micropython
-
-          # Build mpy-cross
-          cd "$MICROPY_DIR/mpy-cross"
-          make -j$(nproc)
-
-          # Detect mpy-cross binary
-          if [ -f ./mpy-cross ]; then
-              MPY_CROSS=$(pwd)/mpy-cross
-          elif [ -f ./build/mpy-cross ]; then
-              MPY_CROSS=$(pwd)/build/mpy-cross
-          else
-              echo "Error: mpy-cross binary not found!"
-              exit 1
-          fi
-          echo "Using mpy-cross: $MPY_CROSS"
-
-          # Prepare modules folder
           MODULES_DIR="$MICROPY_DIR/ports/esp32/modules"
           mkdir -p "$MODULES_DIR"
+          cp ../../modules/*.py "$MODULES_DIR/"
 
-          # Compile all modules to .mpy and copy to ports/esp32/modules
-          for f in ../../modules/*.py; do
-              echo "Compiling $f to .mpy"
-              "$MPY_CROSS" "$f"
-              cp "${f%.py}.mpy" "$MODULES_DIR/"
-          done
-
-          # ✅ No freeze.py needed; mpbuild will pick up .mpy files automatically
-
-      # 5️⃣ Build ESP32_GENERIC_S3 firmware
+      # 5️⃣ Build ESP32_GENERIC_S3 firmware (mpbuild handles freezing)
       - name: Build ESP32_GENERIC_S3 firmware
         run: |
           cd micropython
