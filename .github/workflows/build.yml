@@ -39,28 +39,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install mpbuild typing_extensions
 
-      # 6️⃣ Copy frozen modules to board folder
-      - name: Include frozen modules
+      # 6️⃣ Create DEFAULT variant and copy frozen modules
+      - name: Prepare DEFAULT variant with frozen modules
         run: |
-          if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
-            mkdir -p micropython/ports/esp32/boards/ESP32_GENERIC_S3/frozen_modules
-            cp -r firmware/modules/* micropython/ports/esp32/boards/ESP32_GENERIC_S3/frozen_modules/
-          elif [ "${{ matrix.board }}" = "ESP32_GENERIC_C6" ]; then
-            mkdir -p micropython/ports/esp32/boards/ESP32_GENERIC_C6/frozen_modules
-            cp -r firmware/modules/* micropython/ports/esp32/boards/ESP32_GENERIC_C6/frozen_modules/
-          fi
+          BOARD_DIR=micropython/ports/esp32/boards/${{ matrix.board }}/DEFAULT
+          mkdir -p $BOARD_DIR/frozen_modules
+          cp -r firmware/modules/* $BOARD_DIR/frozen_modules/
 
       # 7️⃣ List available ESP32 boards (optional debug)
       - name: List ESP32 boards
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild list esp32
 
-      # 8️⃣ Build firmware (no SPIRAM/OCT variant)
+      # 8️⃣ Build firmware with DEFAULT variant
       - name: Build firmware
         run: |
-          MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ${{ matrix.board }}
+          MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ${{ matrix.board }} DEFAULT
 
-      # 9️⃣ Debug: show generated .bin files
+      # 9️⃣ Show generated .bin files
       - name: Show build folder contents
         run: |
           echo "Contents of build folder for ${{ matrix.board }}:"
