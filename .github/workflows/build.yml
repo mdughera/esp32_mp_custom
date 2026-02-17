@@ -1,4 +1,4 @@
-name: Build MicroPython Firmware
+name: Build MicroPython Firmware v1.27
 
 on:
   push:
@@ -15,40 +15,40 @@ jobs:
           - ESP32_GENERIC_C6
 
     steps:
-      # 1️⃣ Check out your code
+      # 1️⃣ Checkout your repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Clone MicroPython source at v1.27.0
-      - name: Clone MicroPython
+      # 2️⃣ Clone MicroPython v1.27
+      - name: Clone MicroPython source
         run: |
           git clone --depth 1 --branch v1.27.0 https://github.com/micropython/micropython.git micropython
 
-      # 3️⃣ Setup Python for mpbuild
+      # 3️⃣ Setup Python 3.12
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.12
 
-      # 4️⃣ Install mpbuild + dependency
+      # 4️⃣ Install mpbuild and dependencies
       - name: Install mpbuild
         run: |
           python -m pip install --upgrade pip
           pip install mpbuild typing_extensions
 
-      # 5️⃣ List available ESP32 boards
-      - name: List ESP32 boards
+      # 5️⃣ Optional: list supported ESP32 boards
+      - name: List available ESP32 boards
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild list esp32
 
-      # 6️⃣ Build firmware
+      # 6️⃣ Build firmware for the current board
       - name: Build firmware with frozen modules
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython \
-            mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
+          mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
 
-      # 7️⃣ Upload firmware artifacts
-      - name: Upload artifacts
+      # 7️⃣ Upload the resulting firmware artifact
+      - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.board }}
-          path: ./*.bin
+          name: firmware-${{ matrix.board }}-v1.27
+          path: micropython/ports/esp32/build-${{ matrix.board }}/*.bin
