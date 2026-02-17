@@ -18,21 +18,20 @@ jobs:
         with:
           python-version: '3.x'
 
-      # 3️⃣ Install mpbuild and esptool
-      - name: Install mpbuild and esptool
+      # 3️⃣ Install mpbuild, esptool, and mpy-cross for MicroPython 1.27
+      - name: Install dependencies
         run: |
           python --version
           pip install --upgrade pip
-          pip install typing_extensions mpbuild esptool
+          pip install typing_extensions mpbuild esptool mpy-cross==1.27.0.post2
 
-      # 4️⃣ Clone latest MicroPython release
-      - name: Clone latest MicroPython release
+      # 4️⃣ Clone MicroPython 1.27 source
+      - name: Clone MicroPython v1.27.0
         run: |
           git clone https://github.com/micropython/micropython.git
           cd micropython
-          latest_tag=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -n1)
-          git checkout "$latest_tag"
-          echo "Checked out MicroPython $latest_tag"
+          git checkout v1.27.0
+          echo "Checked out MicroPython v1.27.0"
 
       # 4.5️⃣ Copy Python modules for freezing
       - name: Copy modules for freezing
@@ -50,20 +49,13 @@ jobs:
           # Copy your modules for mpbuild to freeze
           cp $GITHUB_WORKSPACE/modules/*.py "$MODULES_DIR/"
 
-      # 4.6️⃣ Precompile .py modules to .mpy for syntax check
+      # 4.6️⃣ Precompile .py modules to .mpy for syntax check using PyPI mpy-cross
       - name: Precompile modules to .mpy (syntax check)
         run: |
-          # Build mpy-cross inside its folder
-          cd micropython/mpy-cross
-          make -j$(nproc)
-
-          # Use relative path to mpy-cross binary
-          MPY_CROSS=./mpy-cross
-
           # Precompile only your repo modules in /modules
           for f in $GITHUB_WORKSPACE/modules/*.py; do
               echo "Precompiling $(basename $f)"
-              "$MPY_CROSS" "$f" || { echo "Syntax error in $(basename $f)"; exit 1; }
+              mpy-cross "$f" || { echo "Syntax error in $(basename $f)"; exit 1; }
           done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware (mpbuild handles freezing)
