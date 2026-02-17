@@ -1,14 +1,14 @@
-name: Build MicroPython Firmware for Stamp-S3
+name: Build MicroPython Firmware for Stamp-S3 with Frozen .mpy Modules
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout this repository
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -30,10 +30,25 @@ jobs:
         run: |
           git clone https://github.com/micropython/micropython.git
           cd micropython
-          # automatically checkout latest release tag
           latest_tag=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -n1)
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
+
+      # 4.5️⃣ Build mpy-cross for compiling .py → .mpy
+      - name: Build mpy-cross
+        run: |
+          cd micropython/mpy-cross
+          make -j$(nproc)
+
+      # 4.6️⃣ Precompile modules to .mpy
+      - name: Precompile modules to .mpy
+        run: |
+          mkdir -p micropython/ports/esp32/modules
+          for f in modules/*.py; do
+            echo "Compiling $f to .mpy"
+            ./micropython/mpy-cross/mpy-cross "$f"
+            cp "${f%.py}.mpy" micropython/ports/esp32/modules/
+          done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware
       - name: Build ESP32_GENERIC_S3 firmware
