@@ -18,9 +18,9 @@ jobs:
       # 1️⃣ Checkout the repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Set up Docker (official GitHub Action)
+      # 2️⃣ Set up Docker properly (fixed)
       - name: Set up Docker
-        uses: docker/setup-docker@v4
+        uses: docker/setup-docker@v2
         with:
           version: '24.0.6'
 
@@ -50,7 +50,7 @@ jobs:
       - name: Build firmware
         run: |
           MICROPY_DIR=$GITHUB_WORKSPACE/micropython \
-            mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
+          mpbuild build ${{ matrix.board }} --manifest firmware/manifest.py
 
       # 8️⃣ Debug: list generated .bin files
       - name: Show build folder contents
