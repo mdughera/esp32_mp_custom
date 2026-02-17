@@ -18,12 +18,12 @@ jobs:
         with:
           python-version: '3.x'
 
-      # 3️⃣ Install mpbuild
-      - name: Install mpbuild
+      # 3️⃣ Install mpbuild and esptool
+      - name: Install mpbuild and esptool
         run: |
           python --version
           pip install --upgrade pip
-          pip install typing_extensions mpbuild
+          pip install typing_extensions mpbuild esptool
 
       # 4️⃣ Clone latest MicroPython release
       - name: Clone latest MicroPython release
@@ -35,13 +35,75 @@ jobs:
           git checkout "$latest_tag"
           echo "Checked out MicroPython $latest_tag"
 
-      # 5️⃣ Build ESP32_GENERIC_S3
+      # 5️⃣ Build ESP32_GENERIC_S3 firmware
       - name: Build ESP32_GENERIC_S3 firmware
         run: |
           cd micropython
           mpbuild build ESP32_GENERIC_S3
 
-      # 6️⃣ Merge binaries into a single .bin (8MB flash for Stamp-S3)
+      # 6️⃣ Merge binaries into single .bin (8MB flash for Stamp-S3)
+      - name: Merge firmware into single ESP32_GENERIC_S3.bin
+        run: |
+          cd micropython/ports/esp32/build-ESP32_GENERIC_S3
+          python -m esptool --chip esp32s3 merge_bin \
+            -o ESP32_GENERIC_S3.bin \
+            --flash_mode dio \
+            --flash_size 8MB \
+            --flash_freq 80m \
+            0x0 bootloader/bootloader.bin \
+            0x8000 partition_table/partition-table.bin \
+            0x10000 micropython.bin
+
+      # 7️⃣ Upload the merged firmware as a GitHub artifact
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stamp-S3_firmware
+          path: micropython/ports/esp32/build-ESP32_GENERIC_S3/ESP32_GENERIC_S3.bin
+name: Build MicroPython Firmware for Stamp-S3
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout this repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Python 3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # 3️⃣ Install mpbuild and esptool
+      - name: Install mpbuild and esptool
+        run: |
+          python --version
+          pip install --upgrade pip
+          pip install typing_extensions mpbuild esptool
+
+      # 4️⃣ Clone latest MicroPython release
+      - name: Clone latest MicroPython release
+        run: |
+          git clone https://github.com/micropython/micropython.git
+          cd micropython
+          # automatically checkout latest release tag
+          latest_tag=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -n1)
+          git checkout "$latest_tag"
+          echo "Checked out MicroPython $latest_tag"
+
+      # 5️⃣ Build ESP32_GENERIC_S3 firmware
+      - name: Build ESP32_GENERIC_S3 firmware
+        run: |
+          cd micropython
+          mpbuild build ESP32_GENERIC_S3
+
+      # 6️⃣ Merge binaries into single .bin (8MB flash for Stamp-S3)
       - name: Merge firmware into single ESP32_GENERIC_S3.bin
         run: |
           cd micropython/ports/esp32/build-ESP32_GENERIC_S3
