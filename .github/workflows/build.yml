@@ -18,11 +18,9 @@ jobs:
       # 1️⃣ Checkout the repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Set up Docker properly (fixed)
+      # 2️⃣ Set up Docker (correct official action)
       - name: Set up Docker
-        uses: docker/setup-docker@v2
-        with:
-          version: '24.0.6'
+        uses: docker/setup-buildx-action@v2
 
       # 3️⃣ Clone MicroPython source at v1.27
       - name: Clone MicroPython
