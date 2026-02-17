@@ -8,30 +8,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo (optional but good practice)
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup latest Python 3
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3️⃣ Install mpbuild
       - name: Install mpbuild
         run: |
           python --version
           pip install --upgrade pip
           pip install typing_extensions mpbuild
 
-      # 4️⃣ Clone MicroPython
       - name: Clone MicroPython
         run: git clone https://github.com/micropython/micropython.git
 
-      # 5️⃣ Build ESP32_GENERIC_S3
       - name: Build ESP32_GENERIC_S3
         run: |
           cd micropython
-          mpbuild list esp32
           mpbuild build ESP32_GENERIC_S3
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ESP32_GENERIC_S3_firmware
+          path: micropython/ports/esp32/build-ESP32_GENERIC_S3/micropython.bin
