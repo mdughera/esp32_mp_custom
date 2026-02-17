@@ -36,7 +36,16 @@ jobs:
         run: |
           git clone --depth 1 --branch v1.27.0 https://github.com/micropython/micropython.git micropython
 
-      # 5️⃣ Copy frozen modules
+      # 5️⃣ Initialize submodules (for BTREE / optional C modules)
+      - name: Initialize submodules
+        if: matrix.board == 'ESP32_GENERIC_S3'
+        run: |
+          cd micropython
+          git submodule update --init --recursive
+          cd ports/esp32
+          make submodules
+
+      # 6️⃣ Copy frozen modules
       - name: Copy frozen modules
         run: |
           if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
@@ -47,7 +56,7 @@ jobs:
             cp -r firmware/modules/* micropython/ports/esp32/boards/ESP32_GENERIC_C6/frozen_modules/
           fi
 
-      # 6️⃣ Install ESP-IDF v5.5.2 + toolchains for ESP32-S3
+      # 7️⃣ Install ESP-IDF v5.5.2 + toolchains for ESP32-S3
       - name: Install ESP-IDF v5.5.2 + Tools
         if: matrix.board == 'ESP32_GENERIC_S3'
         run: |
@@ -57,13 +66,13 @@ jobs:
           cd ~/esp/esp-idf
           bash ./install.sh
 
-      # 7️⃣ Export ESP-IDF environment
+      # 8️⃣ Export ESP-IDF environment
       - name: Export ESP-IDF
         if: matrix.board == 'ESP32_GENERIC_S3'
         run: |
           . ~/esp/esp-idf/export.sh
 
-      # 8️⃣ Build firmware (fixed Bash syntax)
+      # 9️⃣ Build firmware (fixed Bash syntax)
       - name: Build firmware
         run: |
           BOARD=${{ matrix.board }}
@@ -78,13 +87,13 @@ jobs:
               MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ESP32_GENERIC_C6
           fi
 
-      # 9️⃣ Show build folder contents
+      # 🔟 Show build folder contents
       - name: Show build folder contents
         run: |
           echo "Contents of build folder for ${{ matrix.board }}:"
           ls -l micropython/ports/esp32/build-${{ matrix.board }}/*.bin || echo "No .bin files found"
 
-      # 🔟 Upload ready-to-flash .bin files
+      # 1️⃣1️⃣ Upload ready-to-flash .bin files
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
