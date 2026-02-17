@@ -36,7 +36,7 @@ jobs:
         run: |
           git clone --depth 1 --branch v1.27.0 https://github.com/micropython/micropython.git micropython
 
-      # 5️⃣ Include frozen modules
+      # 5️⃣ Copy frozen modules
       - name: Copy frozen modules
         run: |
           if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
@@ -47,7 +47,7 @@ jobs:
             cp -r firmware/modules/* micropython/ports/esp32/boards/ESP32_GENERIC_C6/frozen_modules/
           fi
 
-      # 6️⃣ Install ESP-IDF v5.5.2 + Tools for S3
+      # 6️⃣ Install ESP-IDF v5.5.2 + toolchains for ESP32-S3
       - name: Install ESP-IDF v5.5.2 + Tools
         if: matrix.board == 'ESP32_GENERIC_S3'
         run: |
@@ -55,7 +55,7 @@ jobs:
           sudo apt install -y git wget flex bison gperf python3-pip ninja-build ccache libffi-dev libssl-dev dfu-util
           git clone --branch v5.5.2 --depth 1 https://github.com/espressif/esp-idf.git ~/esp/esp-idf
           cd ~/esp/esp-idf
-          python3 ./install.sh
+          bash ./install.sh
 
       # 7️⃣ Export ESP-IDF environment
       - name: Export ESP-IDF
@@ -67,16 +67,15 @@ jobs:
       - name: Build firmware
         run: |
           if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
-            echo "Building ESP32-S3 with Makefile (no SPIRAM variant)..."
+            echo "Building ESP32-S3 with Makefile (no SPIRAM)..."
             cd micropython/ports/esp32
             . ~/esp/esp-idf/export.sh
             make BOARD=ESP32_GENERIC_S3
           elif [ "${{ matrix.board }}" = "ESP32_GENERIC_C6" ]; then
             echo "Building ESP32-C6 with mpbuild..."
             MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ESP32_GENERIC_C6
-          fi
 
-      # 9️⃣ Show generated .bin files
+      # 9️⃣ Show build folder contents
       - name: Show build folder contents
         run: |
           echo "Contents of build folder for ${{ matrix.board }}:"
