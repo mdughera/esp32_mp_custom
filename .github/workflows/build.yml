@@ -1,26 +1,41 @@
-name: Python in Latest Docker
+name: Python in Docker with Git Clone
 
 on:
-  workflow_dispatch:  # Run manually from GitHub Actions tab
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   python-docker:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout your repository
+      # 1️⃣ Checkout the current repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Pull latest Python Docker image
+      # 2️⃣ Set up SSH key for GitHub access
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # 3️⃣ Pull latest Python Docker image
       - name: Pull latest Python 3 Docker image
         run: docker pull python:3
 
-      # 3️⃣ Run your Python scripts inside Docker
-      - name: Run Python script in Docker
+      # 4️⃣ Show Python version inside Docker
+      - name: Show Python version
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             python:3 \
-            bash -c "python --version && python your_script.py"
+            bash -c "python --version"
+
+      # 5️⃣ Clone MicroPython repo inside Docker
+      - name: Clone MicroPython in Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            python:3 \
+            bash -c "git clone git@github.com:micropython/micropython.git"
