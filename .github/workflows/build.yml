@@ -53,13 +53,14 @@ jobs:
       # 4.6️⃣ Precompile .py modules to .mpy for syntax check
       - name: Precompile modules to .mpy (syntax check)
         run: |
-          cd micropython
-          # Build mpy-cross for this MicroPython version
-          cd mpy-cross
+          # Build mpy-cross inside its folder
+          cd micropython/mpy-cross
           make -j$(nproc)
-          MPY_CROSS=$(pwd)/mpy-cross
 
-          # Precompile only your repo modules
+          # Use relative path to mpy-cross binary
+          MPY_CROSS=./mpy-cross
+
+          # Precompile only your repo modules in /modules
           for f in $GITHUB_WORKSPACE/modules/*.py; do
               echo "Precompiling $(basename $f)"
               "$MPY_CROSS" "$f" || { echo "Syntax error in $(basename $f)"; exit 1; }
