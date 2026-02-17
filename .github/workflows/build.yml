@@ -18,30 +18,26 @@ jobs:
       # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Set up Docker (required by mpbuild for C6)
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      # 3️⃣ Clone MicroPython v1.27
-      - name: Clone MicroPython
-        run: |
-          git clone --depth 1 --branch v1.27.0 https://github.com/micropython/micropython.git micropython
-
-      # 4️⃣ Setup Python 3.12
+      # 2️⃣ Setup Python 3.12
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.12
 
-      # 5️⃣ Install mpbuild for C6
+      # 3️⃣ Install mpbuild for C6
       - name: Install mpbuild
         if: matrix.board == 'ESP32_GENERIC_C6'
         run: |
           python -m pip install --upgrade pip
           pip install mpbuild typing_extensions
 
-      # 6️⃣ Copy frozen modules to board folder
-      - name: Include frozen modules
+      # 4️⃣ Clone MicroPython v1.27
+      - name: Clone MicroPython
+        run: |
+          git clone --depth 1 --branch v1.27.0 https://github.com/micropython/micropython.git micropython
+
+      # 5️⃣ Include frozen modules
+      - name: Copy frozen modules
         run: |
           if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
             mkdir -p micropython/ports/esp32/modules
@@ -51,25 +47,42 @@ jobs:
             cp -r firmware/modules/* micropython/ports/esp32/boards/ESP32_GENERIC_C6/frozen_modules/
           fi
 
-      # 7️⃣ Build firmware
+      # 6️⃣ Install ESP-IDF for ESP32-S3
+      - name: Install ESP-IDF
+        if: matrix.board == 'ESP32_GENERIC_S3'
+        run: |
+          sudo apt update
+          sudo apt install -y git wget flex bison gperf python3-pip ninja-build ccache libffi-dev libssl-dev dfu-util
+          git clone --branch v5.1 --depth 1 https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+          echo "ESP-IDF installed at ~/esp/esp-idf"
+
+      # 7️⃣ Export ESP-IDF environment
+      - name: Export ESP-IDF
+        if: matrix.board == 'ESP32_GENERIC_S3'
+        run: |
+          . ~/esp/esp-idf/export.sh
+          echo "ESP-IDF environment ready"
+
+      # 8️⃣ Build firmware
       - name: Build firmware
         run: |
           if [ "${{ matrix.board }}" = "ESP32_GENERIC_S3" ]; then
             echo "Building ESP32-S3 with Makefile (no SPIRAM variant)..."
             cd micropython/ports/esp32
+            . ~/esp/esp-idf/export.sh
             make BOARD=ESP32_GENERIC_S3
           elif [ "${{ matrix.board }}" = "ESP32_GENERIC_C6" ]; then
             echo "Building ESP32-C6 with mpbuild..."
             MICROPY_DIR=$GITHUB_WORKSPACE/micropython mpbuild build ESP32_GENERIC_C6
           fi
 
-      # 8️⃣ Show generated .bin files
+      # 9️⃣ Show generated .bin files
       - name: Show build folder contents
         run: |
           echo "Contents of build folder for ${{ matrix.board }}:"
           ls -l micropython/ports/esp32/build-${{ matrix.board }}/*.bin || echo "No .bin files found"
 
-      # 9️⃣ Upload ready-to-flash .bin files
+      # 🔟 Upload ready-to-flash .bin files
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
