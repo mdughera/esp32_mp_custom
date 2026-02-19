@@ -1,11 +1,24 @@
-name: Build MicroPython Firmware for Stamp-S3 with Frozen Modules
+name: Build MicroPython Firmware with Frozen Modules
 
 on:
   workflow_dispatch:
+    inputs:
+      board:
+        description: 'Select the board to build firmware for'
+        required: true
+        default: 'M5STACK_ATOMS3_LITE'
+        type: choice
+        options:
+          - M5STACK_ATOMS3_LITE
+          - ESP32_GENERIC_S3
+          - TTGO_T7
+          - LILYGO_TTGO_S3
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BOARD: ${{ github.event.inputs.board }}  # environment variable for selected board
 
     steps:
       # 1️⃣ Checkout repository
@@ -40,36 +53,33 @@ jobs:
           MODULES_DIR="$MICROPY_DIR/ports/esp32/modules"
           mkdir -p "$MODULES_DIR"
 
-          # Ensure modules exist
           if [ -z "$(ls $GITHUB_WORKSPACE/modules/*.py 2>/dev/null)" ]; then
               echo "Error: No Python modules found in $GITHUB_WORKSPACE/modules/"
               exit 1
           fi
 
-          # Copy your modules for mpbuild to freeze
           cp $GITHUB_WORKSPACE/modules/*.py "$MODULES_DIR/"
 
-      # 4.6️⃣ Precompile .py modules to .mpy for syntax check using PyPI mpy-cross
+      # 4.6️⃣ Precompile .py modules to .mpy (syntax check)
       - name: Precompile modules to .mpy (syntax check)
         run: |
-          # Precompile only your repo modules in /modules
           for f in $GITHUB_WORKSPACE/modules/*.py; do
               echo "Precompiling $(basename $f)"
               mpy-cross "$f" || { echo "Syntax error in $(basename $f)"; exit 1; }
           done
 
-      # 5️⃣ Build ESP32_GENERIC_S3 firmware (mpbuild handles freezing)
-      - name: Build M5STACK_ATOMS3_LITE firmware
+      # 5️⃣ Build firmware using selected board
+      - name: Build firmware
         run: |
           cd micropython
-          mpbuild build M5STACK_ATOMS3_LITE
+          mpbuild build $BOARD
 
-      # 6️⃣ Merge binaries into single .bin (8MB flash for Stamp-S3)
-      - name: Merge firmware into single M5STACK_ATOMS3_LITE.bin
+      # 6️⃣ Merge binaries into single .bin
+      - name: Merge firmware into single .bin
         run: |
-          cd micropython/ports/esp32/build-M5STACK_ATOMS3_LITE
+          cd micropython/ports/esp32/build-$BOARD
           python -m esptool --chip esp32s3 merge_bin \
-            -o M5STACK_ATOMS3_LITE.bin \
+            -o ${BOARD}.bin \
             --flash_mode dio \
             --flash_size 8MB \
             --flash_freq 80m \
@@ -81,5 +91,5 @@ jobs:
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: M5STACK_ATOMS3_LITE firmware
-          path: micropython/ports/esp32/build-M5STACK_ATOMS3_LITE/M5STACK_ATOMS3_LITE.bin
+          name: ${BOARD} firmware
+          path: micropython/ports/esp32/build-${BOARD}/${BOARD}.bin
