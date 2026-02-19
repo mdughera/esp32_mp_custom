@@ -225,7 +225,7 @@ class BTHome:
             if (buffer['last_seen'] != 0): # there is data to be processed
                 cls.parse_values(addr_mac, buffer['data'], buffer['rssi'], buffer['last_seen'])
                 print(f"Finished parsing data for {device_info['name']}")
-                timeout = cls._SCANNING_TIMEOUT # now we know when the device broadcast and we can reduce the timeout (this is done each time even if needed only the first time)
+                timeout = _SCANNING_TIMEOUT # now we know when the device broadcast and we can reduce the timeout (this is done each time even if needed only the first time)
                 buffer['last_seen'] = 0
                 # print("BUFFER:", cls._irq_buffer)
             else:
@@ -266,6 +266,7 @@ class BTHome:
         ah = int((1000 * mw / r) * avp / (temp_c + 273.15))  # g/m³
         return ah
     
+
 
 
 
