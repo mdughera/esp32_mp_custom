@@ -59,17 +59,17 @@ jobs:
           done
 
       # 5️⃣ Build ESP32_GENERIC_S3 firmware (mpbuild handles freezing)
-      - name: Build ESP32_GENERIC_S3 firmware
+      - name: Build M5STACK_ATOMS3_LITE firmware
         run: |
           cd micropython
-          mpbuild build ESP32_GENERIC_S3
+          mpbuild build M5STACK_ATOMS3_LITE
 
       # 6️⃣ Merge binaries into single .bin (8MB flash for Stamp-S3)
-      - name: Merge firmware into single ESP32_GENERIC_S3.bin
+      - name: Merge firmware into single M5STACK_ATOMS3_LITE.bin
         run: |
-          cd micropython/ports/esp32/build-ESP32_GENERIC_S3
+          cd micropython/ports/esp32/build-M5STACK_ATOMS3_LITE
           python -m esptool --chip esp32s3 merge_bin \
-            -o ESP32_GENERIC_S3.bin \
+            -o M5STACK_ATOMS3_LITE.bin \
             --flash_mode dio \
             --flash_size 8MB \
             --flash_freq 80m \
@@ -81,5 +81,5 @@ jobs:
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Stamp-S3_firmware
-          path: micropython/ports/esp32/build-ESP32_GENERIC_S3/ESP32_GENERIC_S3.bin
+          name: M5STACK_ATOMS3_LITE firmware
+          path: micropython/ports/esp32/build-M5STACK_ATOMS3_LITE/M5STACK_ATOMS3_LITE.bin
