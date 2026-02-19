@@ -10,8 +10,8 @@ on:
         type: choice
         options:
           - M5STACK_ATOMS3_LITE
-          - ESP32_GENERIC_S3
           - M5STACK_NANOC6
+          - ESP32_GENERIC_S3
 
 jobs:
   build:
