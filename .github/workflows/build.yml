@@ -79,11 +79,11 @@ jobs:
         run: |
           export BOARD=$BOARD
           cd micropython/ports/esp32/build-$BOARD
-          python -m esptool --chip esp32s3 merge_bin \
+          python -m esptool --chip esp32s3 merge-bin \
             -o ${BOARD}.bin \
-            --flash_mode dio \
-            --flash_size 8MB \
-            --flash_freq 80m \
+            --flash-mode dio \
+            --flash-size 8MB \
+            --flash-freq 80m \
             0x0 bootloader/bootloader.bin \
             0x8000 partition_table/partition-table.bin \
             0x10000 micropython.bin
@@ -91,6 +91,8 @@ jobs:
       # 7️⃣ Upload the merged firmware as a GitHub artifact
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
+
         with:
-          name: ${BOARD} firmware
-          path: micropython/ports/esp32/build-${BOARD}/${BOARD}.bin
+          name: ${{ env.BOARD }} firmware
+          path: micropython/ports/esp32/build-${{ env.BOARD }}/${{ env.BOARD }}.bin
+
