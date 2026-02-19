@@ -8,6 +8,9 @@ import gc # experimental: call gc.collect before turning on BLE to see if it sol
 import network
 from micropython import const
 
+_SCANNING_TIMEOUT = const(5) # scanning timeout after the first broadcast is received
+_IRQ_SCAN_RESULT = const(5)
+_IRQ_SCAN_DONE = const(6)
 
 class BTHome:
     _ble = None
@@ -18,8 +21,6 @@ class BTHome:
     _irq_error_count = 0
     _BUFFER_SIZE = 32
     _start = 0
-    _SCANNING_TIMEOUT = 5 # scanning timeout after the first broadcast is received
-    _ONE_YEAR_SECONDS = 365 * 24 * 60 * 60  # 31,536,000 seconds, one year
     
     # Convert a BLE address as 7c:c6:b6:72:9d:ae in the corresponding bytes as received in irq
     @staticmethod
@@ -112,8 +113,6 @@ class BTHome:
     # *** prints in this routine may disconnect WEBREPL or cause crashes ***
     @staticmethod
     def _ble_irq(event, data):
-        _IRQ_SCAN_RESULT = const(5)
-        _IRQ_SCAN_DONE = const(6)
         try: 
             if event == _IRQ_SCAN_RESULT:
                 addr_type, addr, adv_type, rssi, adv_data = data
@@ -267,6 +266,7 @@ class BTHome:
         ah = int((1000 * mw / r) * avp / (temp_c + 273.15))  # g/m³
         return ah
     
+
 
 
 
